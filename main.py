@@ -1,53 +1,45 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
 from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+import matplotlib.pyplot as plt
 
-# Sample marketing data
-data = {
-    'Category': ['Category A', 'Category B', 'Category A', 'Category C', 'Category B'],
-    'Clicks': [100, 150, 120, 80, 90],
-    'Impressions': [1000, 1200, 800, 600, 700]
-}
+# Sample data
+clicks_data = pd.DataFrame({'Category': ['A', 'B', 'A', 'B', 'C'],
+                            'Clicks': [100, 150, 120, 80, 90]})
+impressions_data = pd.DataFrame({'Campaign': ['X', 'Y', 'X', 'Y', 'Z'],
+                                 'Impressions': [1000, 1200, 800, 900, 700]})
 
-df = pd.DataFrame(data)
-
-# Calculate the sum of clicks and total impressions by category
-clicks_by_category = df.groupby('Category')['Clicks'].sum().reset_index()
-impressions_by_category = df.groupby('Category')['Impressions'].sum().reset_index()
+# Group clicks by category
+clicks_grouped = clicks_data.groupby('Category').sum()
 
 # Create a Streamlit app
-st.title('Marketing Data Analysis')
-st.write('Sample Marketing Data:')
+st.title('Clicks and Impressions')
 
-# Display the sample marketing data
-st.write(df)
+st.subheader('Clicks by Category')
+st.write(clicks_grouped)
 
-# Create a function to generate a PDF with the calculations
-def generate_pdf():
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    
-    p.drawString(100, 750, "Clicks by Category")
-    p.drawString(100, 725, clicks_by_category.to_string())
-    
-    p.drawString(100, 625, "Impressions by Category")
-    p.drawString(100, 600, impressions_by_category.to_string())
-    
-    p.showPage()
-    p.save()
-    
-    buffer.seek(0)
-    return buffer
+st.subheader('Impressions by Campaign')
+st.write(impressions_data)
 
-# Create a downloadable link for the PDF
-st.markdown("### Download PDF with Calculations")
-pdf_buffer = generate_pdf()
-st.download_button(
-    label="Download PDF",
-    data=pdf_buffer,
-    key="pdf",
-    on_click=None,
-)
+# Download as PDF
+if st.button("Download as PDF"):
+    # Create a PDF document
+    pdf_buffer = BytesIO()
+    plt.figure(figsize=(8, 6))
+    plt.subplot(2, 1, 1)
+    plt.bar(clicks_grouped.index, clicks_grouped['Clicks'])
+    plt.title('Clicks by Category')
+    
+    plt.subplot(2, 1, 2)
+    plt.bar(impressions_data['Campaign'], impressions_data['Impressions'])
+    plt.title('Impressions by Campaign')
 
+    plt.tight_layout()
+    plt.savefig(pdf_buffer, format='pdf')
+    pdf_buffer.seek(0)
+
+    # Offer the PDF for download
+    st.markdown(f'<a href="data:application/pdf;base64,{pdf_buffer.read().encode("base64").decode()}" download="report.pdf">Download PDF</a>',
+                unsafe_allow_html=True)
+
+st.write('You can click the button to download the report as a PDF.')
