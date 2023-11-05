@@ -39,7 +39,13 @@ if st.button("Download as PDF"):
     pdf_buffer.seek(0)
 
     # Offer the PDF for download
-    st.markdown(f'<a href="data:application/pdf;base64,{pdf_buffer.read().encode("base64").decode()}" download="report.pdf">Download PDF</a>',
-                unsafe_allow_html=True)
+    import base64
 
-st.write('You can click the button to download the report as a PDF.')
+
+    # Assuming you have a PDF file in a bytes variable called pdf_buffer
+    pdf_base64 = base64.b64encode(pdf_buffer).decode('utf-8')
+    link = f'<a href="data:application/pdf;base64,{pdf_base64}" download="report.pdf">Download PDF</a>'
+    st.markdown(link, unsafe_allow_html=True)
+
+
+    st.write('You can click the button to download the report as a PDF.')
